@@ -28,17 +28,17 @@ app.post("/echo", (req, res) => {
   res.json(req.body);
 });
 
-// return a token for any valid username/password
+// return a token only for correct credentials
 app.post("/auth/token", (req, res) => {
   const { username, password } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ error: "username and password required" });
+  if (username !== "admin" || password !== "password") {
+    return res.status(401).json({ error: "Invalid credentials" });
   }
   res.json({ token: SECRET_TOKEN });
 });
 
 // create a book
-app.post("/books", (req, res) => {
+app.post("/books", authMiddleware, (req, res) => {
   const { title, author, year } = req.body || {};
 
   if (!title || !author) {
@@ -51,7 +51,7 @@ app.post("/books", (req, res) => {
 });
 
 // get all books, supports ?author= and ?page=&limit=
-app.get("/books", (req, res) => {
+app.get("/books", authMiddleware, (req, res) => {
   let result = [...books];
 
   if (req.query.author) {
@@ -70,7 +70,7 @@ app.get("/books", (req, res) => {
 });
 
 // get a single book by id
-app.get("/books/:id", (req, res) => {
+app.get("/books/:id", authMiddleware, (req, res) => {
   const book = books.find((b) => b.id === parseInt(req.params.id));
   if (!book) {
     return res.status(404).json({ error: "Book not found" });
@@ -79,7 +79,7 @@ app.get("/books/:id", (req, res) => {
 });
 
 // update title and/or author
-app.put("/books/:id", (req, res) => {
+app.put("/books/:id", authMiddleware, (req, res) => {
   const idx = books.findIndex((b) => b.id === parseInt(req.params.id));
   if (idx === -1) {
     return res.status(404).json({ error: "Book not found" });
@@ -92,7 +92,7 @@ app.put("/books/:id", (req, res) => {
 });
 
 // remove a book
-app.delete("/books/:id", (req, res) => {
+app.delete("/books/:id", authMiddleware, (req, res) => {
   const idx = books.findIndex((b) => b.id === parseInt(req.params.id));
   if (idx === -1) {
     return res.status(404).json({ error: "Book not found" });
