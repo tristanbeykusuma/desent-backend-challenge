@@ -38,20 +38,20 @@ app.post("/auth/token", (req, res) => {
 });
 
 // create a book
-app.post("/books", authMiddleware, (req, res) => {
-  const { title, author } = req.body || {};
+app.post("/books", (req, res) => {
+  const { title, author, year } = req.body || {};
 
   if (!title || !author) {
     return res.status(400).json({ error: "title and author are required" });
   }
 
-  const book = { id: nextId++, title, author };
+  const book = { id: nextId++, title, author, year: year || null };
   books.push(book);
   res.status(201).json(book);
 });
 
 // get all books, supports ?author= and ?page=&limit=
-app.get("/books", authMiddleware, (req, res) => {
+app.get("/books", (req, res) => {
   let result = [...books];
 
   if (req.query.author) {
@@ -70,7 +70,7 @@ app.get("/books", authMiddleware, (req, res) => {
 });
 
 // get a single book by id
-app.get("/books/:id", authMiddleware, (req, res) => {
+app.get("/books/:id", (req, res) => {
   const book = books.find((b) => b.id === parseInt(req.params.id));
   if (!book) {
     return res.status(404).json({ error: "Book not found" });
@@ -79,19 +79,20 @@ app.get("/books/:id", authMiddleware, (req, res) => {
 });
 
 // update title and/or author
-app.put("/books/:id", authMiddleware, (req, res) => {
+app.put("/books/:id", (req, res) => {
   const idx = books.findIndex((b) => b.id === parseInt(req.params.id));
   if (idx === -1) {
     return res.status(404).json({ error: "Book not found" });
   }
-  const { title, author } = req.body || {};
+  const { title, author, year } = req.body || {};
   if (title) books[idx].title = title;
   if (author) books[idx].author = author;
+  if (year) books[idx].year = year;
   res.json(books[idx]);
 });
 
 // remove a book
-app.delete("/books/:id", authMiddleware, (req, res) => {
+app.delete("/books/:id", (req, res) => {
   const idx = books.findIndex((b) => b.id === parseInt(req.params.id));
   if (idx === -1) {
     return res.status(404).json({ error: "Book not found" });
